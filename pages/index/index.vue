@@ -30,7 +30,7 @@
             </text>
             
             <view class="hero-actions">
-              <button class="btn-primary">Get Started</button>
+              <button class="btn-primary" @click="handleGetStarted">Get Started</button>
               <button class="btn-secondary">Documentation</button>
             </view>
           </view>
@@ -95,6 +95,8 @@ import { ref, onMounted } from 'vue';
 import PcNavbar from '@/components/PcNavbar/PcNavbar.vue';
 import PcFooter from '@/components/PcFooter/PcFooter.vue';
 import PcReveal from '@/components/PcReveal/PcReveal.vue';
+//引入登录状态检测
+import { store, mutations } from '@/uni_modules/uni-id-pages/common/store.js';
 
 //如果是调用云函数，返回的数据结构是res.result.data
 //如果是调用云对象，返回的数据结构是res 
@@ -130,6 +132,21 @@ const fetchHomeData = async () => {
 		})
 	}
 	
+};
+const handleGetStarted = () => {
+  // 1. 检查登录状态
+  if (store.hasLogin) {
+    // 2. 已登录 -> 跳转到学习中心 (新页面)
+    uni.navigateTo({
+      url: '/pages/study/index',
+      animationType: 'fade-in' // 大厂喜欢淡入淡出，比较优雅
+    });
+  } else {
+    // 3. 未登录 -> 跳转登录页
+    uni.navigateTo({
+      url: '/pages/login/login'
+    });
+  }
 };
 
 //页面最开始

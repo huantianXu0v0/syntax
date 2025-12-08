@@ -1,0 +1,95 @@
+//题目表--这是最核心的表。为了实现**“选择题”和“代码填空题”**的兼容，content 字段设计为 object 类型，用于存储不同题型的特有数据
+{
+	"bsonType": "object",
+	"required": ["category_id", "type", "title", "content"],
+	"permission": {
+		"read": true,
+		"create": false,
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"category_id": {
+			"bsonType": "string",
+			"description": "所属分类ID",
+			"title": "所属分类",
+			"foreignKey": "quiz-categories._id"
+		},
+		"type": {
+			"bsonType": "string",
+			"description": "题型枚举",
+			"title": "题型",
+			"enum": [
+				{ "value": "choice", "text": "单选题" },
+				{ "value": "multiple", "text": "多选题" },
+				{ "value": "code_gap", "text": "代码填空" }
+			]
+		},
+		"difficulty": {
+			"bsonType": "int",
+			"description": "难度：1简单, 2中等, 3困难",
+			"title": "难度",
+			"enum": [
+				{ "value": 1, "text": "简单" },
+				{ "value": 2, "text": "中等" },
+				{ "value": 3, "text": "困难" }
+			]
+		},
+		"title": {
+			"bsonType": "string",
+			"description": "题目描述，支持 Markdown",
+			"title": "题目内容"
+		},
+		"content": {
+			"bsonType": "object",
+			"description": "题目详情数据 (根据 type 不同而结构不同)",
+			"title": "题目详情",
+			"properties": {
+				// --- 场景1：选择题字段 ---
+				"options": {
+					"bsonType": "array",
+					"description": "选项列表 [{id:'A', text:'...', image:'...'}]"
+				},
+				// --- 场景2：代码填空题字段 ---
+				"language": { 
+					"bsonType": "string", 
+					"description": "编程语言 java/python/js" 
+				},
+				"code_snippet": { 
+					"bsonType": "string", 
+					"description": "代码片段，占位符使用 {{gap}}" 
+				},
+				"gap_mode": { 
+					"bsonType": "string", 
+					"description": "select(选词) | input(手写)" 
+				},
+				"gap_options": { 
+					"bsonType": "array", 
+					"description": "选词模式下的备选词库" 
+				}
+			}
+		},
+		"answer": {
+			"bsonType": "object",
+			"description": "答案与解析 (前端只在练习模式或提交后可见)",
+			"title": "答案解析",
+			"properties": {
+				"correct_val": { 
+					"bsonType": "array",
+					"description": "正确答案数组，如 ['A'] 或 ['println']"
+				},
+				"analysis": { 
+					"bsonType": "string", 
+					"description": "题目解析 (Markdown)" 
+				}
+			}
+		},
+		"create_date": {
+			"bsonType": "timestamp",
+			"defaultValue": { "$env": "now" }
+		}
+	}
+}

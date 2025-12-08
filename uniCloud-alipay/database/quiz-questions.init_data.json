@@ -1,0 +1,55 @@
+[
+  {
+    "category_id": "CHAPTER_ID_HERE",
+    "type": "choice",
+    "difficulty": 1,
+    "title": "在 Python 中，以下哪个变量名是**非法**的？",
+    "content": {
+      "options": [
+        { "id": "A", "text": "my_variable" },
+        { "id": "B", "text": "_value" },
+        { "id": "C", "text": "2nd_place" },
+        { "id": "D", "text": "TOTAL_SUM" }
+      ]
+    },
+    "answer": {
+      "correct_val": ["C"],
+      "analysis": "变量名不能以数字开头。`2nd_place` 以数字 2 开头，因此是非法的。"
+    },
+    "create_date": 1700000000000
+  },
+  {
+    "category_id": "CHAPTER_ID_HERE",
+    "type": "code_gap",
+    "difficulty": 1,
+    "title": "补全代码，输出 'Hello World'",
+    "content": {
+      "language": "python",
+      "code_snippet": "message = \"Hello World\"\nprint{{gap}}message{{gap}}",
+      "gap_mode": "input",
+      "gap_options": []
+    },
+    "answer": {
+      "correct_val": ["(", ")"],
+      "analysis": "Python 3.x 中 `print` 是一个函数，必须使用括号 `()` 进行调用。"
+    },
+    "create_date": 1700000000000
+  },
+  {
+    "category_id": "CHAPTER_ID_HERE",
+    "type": "code_gap",
+    "difficulty": 2,
+    "title": "补全代码，判断变量类型",
+    "content": {
+      "language": "python",
+      "code_snippet": "x = 10\nif {{gap}}(x) == int:\n    print(\"Integer\")",
+      "gap_mode": "select",
+      "gap_options": ["typeof", "type", "class", "instance"]
+    },
+    "answer": {
+      "correct_val": ["type"],
+      "analysis": "Python 使用 `type()` 函数来获取对象的类型。"
+    },
+    "create_date": 1700000000000
+  }
+]

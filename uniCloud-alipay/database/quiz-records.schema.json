@@ -1,0 +1,58 @@
+// 用户答题记录表--这张表用于记录用户的每一次提交，既能用于生成“错题本”，也能分析用户在某个知识点上的熟练度。
+{
+	"bsonType": "object",
+	"required": ["user_id", "question_id", "is_correct"],
+	"permission": {
+		"read": "doc.user_id == auth.uid", // 用户只能看自己的记录
+		"create": "auth.uid != null",      // 登录用户才能答题
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": {
+			"description": "ID，系统自动生成"
+		},
+		"user_id": {
+			"bsonType": "string",
+			"description": "用户ID",
+			"title": "用户",
+			"foreignKey": "uni-id-users._id",
+			"forceDefaultValue": { "$env": "uid" } // 强制存入当前登录用户ID
+		},
+		"question_id": {
+			"bsonType": "string",
+			"description": "题目ID",
+			"title": "题目",
+			"foreignKey": "quiz-questions._id"
+		},
+		"user_answer": {
+			"bsonType": "array",
+			"description": "用户的答案",
+			"title": "用户答案"
+		},
+		"is_correct": {
+			"bsonType": "bool",
+			"description": "是否正确",
+			"title": "结果"
+		},
+		"score": {
+			"bsonType": "int",
+			"description": "本题得分",
+			"title": "得分"
+		},
+		"duration": {
+			"bsonType": "int",
+			"description": "耗时(毫秒)，用于分析熟练度",
+			"title": "耗时"
+		},
+		"mode": {
+			"bsonType": "string",
+			"description": "练习(practice)还是考试(exam)",
+			"title": "模式"
+		},
+		"create_date": {
+			"bsonType": "timestamp",
+			"defaultValue": { "$env": "now" }
+		}
+	}
+}

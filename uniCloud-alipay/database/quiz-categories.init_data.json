@@ -1,0 +1,47 @@
+  {
+    "name": "Linux 系统工程",
+    "description": "掌控 Shell 指令、文件权限与进程管理，构建服务器运维的坚实基石。",
+    "icon": "/static/icons/linux.png",
+    "sort": 100,
+    "status": true,
+    "parent_id": null,
+    "unlock_rules": {
+        "pre_category_id": null,
+        "pass_score": 0
+    },
+    "create_date": 1700000000000
+  },
+  {
+    "name": "Python 核心编程",
+    "description": "从基础语法到高阶特性，优雅地处理数据结构，开启 AI 与全栈开发之路。",
+    "icon": "/static/icons/python.png",
+    "sort": 90,
+    "status": true,
+    "parent_id": null,
+    "unlock_rules": {
+        "pre_category_id": null,
+        "pass_score": 0
+    },
+    "create_date": 1700000000000
+  },
+  //子章节数据
+  {
+      "name": "01. Python 语法基础",
+      "description": "掌握变量、数据类型与基础运算符，迈出编程第一步。",
+      "icon": "",
+      "sort": 10,
+      "status": true,
+      "parent_id": "6936df2edeca8131f001b6e9", //这里记得换成对应父节点的_id
+      "unlock_rules": { "pre_category_id": null, "pass_score": 0 },
+      "create_date": 1700000000000
+    },
+    {
+      "name": "02. 列表与字典",
+      "description": "深入理解 Python 核心数据结构，学会高效管理数据。",
+      "icon": "",
+      "sort": 20,
+      "status": true,
+      "parent_id": "6936df2edeca8131f001b6e9",
+      "unlock_rules": { "pre_category_id": null, "pass_score": 0 },
+      "create_date": 1700000000000
+    }

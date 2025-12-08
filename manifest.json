@@ -1,7 +1,7 @@
 {
     "name" : "syntax",
     "appid" : "__UNI__9188856",
-    "description" : "",
+    "description" : "A next-generation immersive programming assessment platform built on UniCloud.",
     "versionName" : "1.0.0",
     "versionCode" : "100",
     "transformPx" : false,

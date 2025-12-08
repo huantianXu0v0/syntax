@@ -1,0 +1,7 @@
+{
+  "name": "quiz-co",
+  "dependencies": {},
+  "extensions": {
+    "uni-cloud-jql": {}
+  }
+}

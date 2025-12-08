@@ -15,6 +15,18 @@
 		{
 		      "path": "pages/register/register",
 		      "style": { "navigationStyle": "custom", "titleNView": false }
+		},
+		{
+		      "path": "pages/study/index",
+		      "style": { "navigationStyle": "custom", "titleNView": false }
+		},
+		{
+		      "path": "pages/study/learning-path",
+		      "style": { "navigationStyle": "custom", "titleNView": false }
+		},
+		{
+		      "path": "pages/quiz/practice",
+		      "style": { "navigationStyle": "custom", "titleNView": false }
 		}
 	,{
     "path": "uni_modules/uni-id-pages/pages/register/register",
