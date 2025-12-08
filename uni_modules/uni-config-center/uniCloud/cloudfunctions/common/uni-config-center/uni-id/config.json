@@ -1,0 +1,10 @@
+{
+  "passwordSecret": "fill-your-own-secret-key-here", 
+  "tokenSecret": "fill-your-own-token-secret-here",  
+  "tokenExpiresIn": 7200,
+  "tokenExpiresThreshold": 3600,
+  "passwordErrorLimit": 6,
+  "passwordErrorRetryTime": 3600,
+  "autoSetInviteCode": false,
+  "forceInviteCode": false
+}

@@ -1,0 +1,42 @@
+	{
+		"sort": 10,
+		"status": 1,
+		"icon": "⚡️",
+		"title": "High Performance",
+		"desc": "Built for speed with optimized assets delivery."
+	},
+	{
+		"sort": 20,
+		"status": 1,
+		"icon": "🔒",
+		"title": "Secure",
+		"desc": "Enterprise-grade security standards out of the box."
+	},
+	{
+		"sort": 30,
+		"status": 1,
+		"icon": "🛠",
+		"title": "Developer First",
+		"desc": "Intuitive API design and great documentation."
+	},
+	{
+		"sort": 40,
+		"status": 1,
+		"icon": "📈",
+		"title": "Analytics",
+		"desc": "Track your growth with privacy-friendly metrics."
+	},
+	{
+		"sort": 50,
+		"status": 1,
+		"icon": "☁️",
+		"title": "Cloud Native",
+		"desc": "Serverless functions and edge caching included."
+	},
+	{
+		"sort": 60,
+		"status": 1,
+		"icon": "🤝",
+		"title": "Collaboration",
+		"desc": "Work with your team in real-time environments."
+	}
