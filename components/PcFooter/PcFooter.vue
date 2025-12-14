@@ -21,7 +21,7 @@
       </view>
       <view class="footer-col brand-col">
         <text class="logo">UNI-CLOUD</text>
-        <text class="copyright">© 2025 All rights reserved.</text>
+        <text class="copyright">© 2026  Huantian Xu reserves all rights.</text>
       </view>
     </view>
   </view>

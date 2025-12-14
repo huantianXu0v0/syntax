@@ -16,6 +16,7 @@
 
         <text class="form-title">Welcome back</text>
         <text class="form-sub">Please enter your details to sign in.</text>
+		<text class="form-sub">你的登录账号是 u+手机号，如u158xxxxxxxx</text>
 
         <!-- 1. 账号输入框 (支持手机号/邮箱/用户名) -->
         <view class="input-group">
@@ -58,10 +59,23 @@
 import { ref, reactive } from 'vue';
 //引入 mutations
 import { mutations } from '@/uni_modules/uni-id-pages/common/store.js';
+import { onLoad } from '@dcloudio/uni-app'; // 引入 onLoad
 
 const uniIdCo = uniCloud.importObject('uni-id-co');
 const isLoading = ref(false);
 const captchaRef = ref(null); // 验证码组件实例
+
+// 1. 定义变量存跳转地址
+const redirectUrl = ref('');
+
+// 2. 在 onLoad 中接收参数
+onLoad((options) => {
+    if (options.uniIdRedirectUrl) {
+        // 解码参数
+        redirectUrl.value = decodeURIComponent(options.uniIdRedirectUrl);
+        // console.log('登录后将跳转至:', redirectUrl.value);
+    }
+});
 
 const loginData = reactive({
   username: '',
@@ -125,8 +139,15 @@ const handleLogin = async () => {
 			});
           
           setTimeout(() => {
-            // 强制刷新首页
-            uni.reLaunch({ url: '/pages/index/index' });
+			if (redirectUrl.value) {
+			    // A. 如果有回跳地址 -> 比如回到答题页
+			    // 使用 redirectTo 或 reLaunch 均可，看你是否想保留登录页在栈里(通常不想)
+			    uni.redirectTo({ url: redirectUrl.value });
+			} else {
+			    // B. 默认 -> 回首页
+			    uni.reLaunch({ url: '/pages/index/index' });
+			}  
+            
           }, 800);
         } 
         
@@ -154,7 +175,7 @@ const handleLogin = async () => {
         loginData.captcha = '';
     }
     
-    uni.showToast({ title: msg, icon: 'none' });
+    uni.showToast({ title: msg+'111', icon: 'none' });
   } finally {
     isLoading.value = false;
   }

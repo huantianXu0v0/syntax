@@ -6,5 +6,18 @@
   "passwordErrorLimit": 6,
   "passwordErrorRetryTime": 3600,
   "autoSetInviteCode": false,
-  "forceInviteCode": false
+  "forceInviteCode": false,
+  
+    "hosts": {
+      "env-00jxu6vs5dcj-static.normal.cloudstatic.cn": "html5", 
+      "localhost": "html5"
+    },
+    
+    "web": {
+        "url": "https://env-00jxu6vs5dcj-static.normal.cloudstatic.cn",
+        "hosts": [
+            "env-00jxu6vs5dcj-static.normal.cloudstatic.cn",
+            "localhost"
+        ]
+    }
 }

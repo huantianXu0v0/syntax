@@ -1,7 +1,7 @@
 {
   "name": "quiz-co",
-  "dependencies": {},
-  "extensions": {
-    "uni-cloud-jql": {}
-  }
+  "dependencies": {
+    "uni-id-common": "file:../../../uni_modules/uni-id-common/uniCloud/cloudfunctions/common/uni-id-common"
+  },
+  "extensions": {}
 }

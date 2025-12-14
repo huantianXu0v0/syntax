@@ -16,8 +16,7 @@
 			"bsonType": "string",
 			"description": "用户ID",
 			"title": "用户",
-			"foreignKey": "uni-id-users._id",
-			"forceDefaultValue": { "$env": "uid" } // 强制存入当前登录用户ID
+			"foreignKey": "uni-id-users._id"
 		},
 		"question_id": {
 			"bsonType": "string",

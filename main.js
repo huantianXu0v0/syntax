@@ -13,8 +13,15 @@ app.$mount()
 
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
+import  plugin from'@/utils/plugin.js'
+
+
 export function createApp() {
   const app = createSSRApp(App)
+  
+  app.use(plugin)
+
+  
   return {
     app
   }

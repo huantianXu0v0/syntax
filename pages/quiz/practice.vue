@@ -1,17 +1,13 @@
 <template>
   <view class="quiz-workspace">
     
-    <!-- 1. 沉浸式 Header -->
+    <!-- 1. Header (增加题目列表入口) -->
     <view class="quiz-header">
       <view class="header-left" @click="handleExit">
-		<view class="header-right">
-         <!-- 增加退出按钮 -->
-         <view class="btn-close" @click="handleExit">Exit</view>
-       </view>
-        <text class="chapter-title">{{ title || 'Practice' }}</text>
+        <view class="btn-close">Exit</view>
       </view>
       
-      <!-- 进度指示器 -->
+      <!-- 进度条 -->
       <view class="header-center">
         <text class="progress-text">Question {{ currentIndex + 1 }} / {{ questionList.length }}</text>
         <view class="progress-track">
@@ -20,126 +16,219 @@
       </view>
       
       <view class="header-right">
-        <view class="timer-badge">
-          <text>⏱ {{ formatTime(duration) }}</text>
+        <!-- 题目列表开关 (新增) -->
+        <view class="list-toggle" @click="toggleDrawer">
+          <text class="icon-list">☰</text>
+          <text class="list-text">{{ answeredCount }}/{{ questionList.length }}</text>
+        </view>
+
+        <!-- 计时器 -->
+        <view class="timer-wrapper">
+          <view class="reset-btn" v-if="duration > 0" @click.stop="resetTimer">↺</view>
+          <view class="timer-badge" :class="{ 'is-running': isTimerRunning }" @click="toggleTimer">
+            <text class="timer-icon">{{ isTimerRunning ? '⏸' : '▶️' }}</text>
+            <text>{{ formatTime(duration) }}</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <!-- Loading 状态 -->
+    <!-- Loading -->
     <view class="loading-container" v-if="loading">
       <view class="spinner"></view>
       <text>Preparing your workspace...</text>
     </view>
 
-    <!-- 2. 主工作区 (Split View) -->
+    <!-- 2. 主工作区 -->
     <view class="quiz-body" v-else-if="currentQ">
-          
-          <!-- 左侧：题目描述 -->
-          <view class="panel-context">
-            <scroll-view scroll-y class="scroll-inner">
-              <view class="context-content">
-                <view class="tags-row">
-                  <view class="tag difficulty" :class="'lv-'+currentQ.difficulty">{{ getDifficultyLabel(currentQ.difficulty) }}</view>
-                  <view class="tag type">{{ currentQ.type === 'code_gap' ? 'Code' : 'Choice' }}</view>
-                </view>
-                <text class="q-title">{{ currentQ.title }}</text>
-                <!-- 这里可以增加 Markdown 渲染器，目前先用 Text -->
-              </view>
-            </scroll-view>
+      <!-- 左侧：题目描述 -->
+      <view class="panel-context">
+        <scroll-view scroll-y class="scroll-inner">
+          <view class="context-content">
+            <view class="tags-row">
+              <view class="tag difficulty" :class="'lv-'+currentQ.difficulty">{{ getDifficultyLabel(currentQ.difficulty) }}</view>
+              <view class="tag type">{{ currentQ.type === 'code_gap' ? 'Code' : 'Choice' }}</view>
+            </view>
+            <text class="q-title">{{ currentQ.title }}</text>
           </view>
-    
-          <!-- 右侧：交互区 -->
-          <view class="panel-interaction">
-            <scroll-view scroll-y class="scroll-inner">
-              <view class="interaction-content">
-                
-                <!-- 1. 选择题组件 -->
-                <QuizChoice 
-                  v-if="currentQ.type === 'choice'"
-                  :options="currentQ.content.options"
-                  v-model="userAnswers[currentIndex]"
-                  :show-result="hasSubmitted"
-                  :correct-answer="currentQ.answer.correct_val"
-                />
-    
-                <!-- 2. 代码填空组件 -->
-                <QuizCodeGap 
-                  v-else-if="currentQ.type === 'code_gap'"
-                  :code="currentQ.content.code_snippet"
-                  :lang="currentQ.content.language"
-                  :gap-mode="currentQ.content.gap_mode"
-                  :gap-options="currentQ.content.gap_options"
-                  v-model="userAnswers[currentIndex]"
-                  :show-result="hasSubmitted"
-                  :correct-answer="currentQ.answer.correct_val"
-                />
-    
-                <!-- 3. 结果解析卡片 (提交后显示) -->
-                <view class="feedback-card" v-if="hasSubmitted" :class="isCurrentCorrect ? 'success' : 'error'">
-                  <view class="fb-header">
-                    <text class="fb-icon">{{ isCurrentCorrect ? '🎉' : '🤔' }}</text>
-                    <text class="fb-title">{{ isCurrentCorrect ? 'Correct!' : 'Incorrect' }}</text>
-                  </view>
-                  <text class="fb-desc">{{ currentQ.answer.analysis || 'No analysis provided.' }}</text>
-                </view>
-    
+        </scroll-view>
+      </view>
+
+      <!-- 右侧：交互区 -->
+      <view class="panel-interaction">
+        <scroll-view scroll-y class="scroll-inner">
+          <view class="interaction-content">
+            <!-- 组件 -->
+            <QuizChoice 
+              v-if="currentQ.type === 'choice'"
+              :options="currentQ.content.options"
+              v-model="userAnswers[currentIndex]"
+              :show-result="hasSubmitted"
+              :correct-answer="currentResult?.correct_val || []" 
+            />
+            <QuizCodeGap 
+              v-else-if="currentQ.type === 'code_gap'"
+              :code="currentQ.content.code_snippet"
+              :lang="currentQ.content.language"
+              :gap-mode="currentQ.content.gap_mode"
+              :gap-options="currentQ.content.gap_options"
+              v-model="userAnswers[currentIndex]"
+              :show-result="hasSubmitted"
+              :correct-answer="currentResult?.correct_val || []"
+            />
+
+            <!-- 结果解析 -->
+            <view class="feedback-card" v-if="hasSubmitted && currentResult" :class="isCurrentCorrect ? 'success' : 'error'">
+              <view class="fb-header">
+                <text class="fb-icon">{{ isCurrentCorrect ? '🎉' : '🤔' }}</text>
+                <text class="fb-title">{{ isCurrentCorrect ? 'Correct!' : 'Incorrect' }}</text>
               </view>
-            </scroll-view>
-          </view>
-    
-        </view>
-    
-        <!-- 底部 Action Bar -->
-        <view class="action-bar">
-          <view class="bar-inner">
-            <view class="btn-group">
-              <!-- 只有在未提交时才允许切题，或者你可以设计成随时切题 -->
-              <button class="btn-secondary" @click="prevQuestion" :disabled="currentIndex === 0">Prev</button>
-              
-              <!-- 核心按钮逻辑 -->
-              <button class="btn-primary" @click="handleMainAction" :class="btnStatusClass">
-                {{ mainBtnText }}
-              </button>
+              <text class="fb-desc">{{ currentResult.analysis || 'No analysis provided.' }}</text>
             </view>
           </view>
-        </view>
-    
+        </scroll-view>
       </view>
+    </view>
+
+    <!-- 3. 底部 Action Bar (按钮逻辑升级) -->
+    <view class="action-bar">
+      <view class="bar-inner">
+        <view class="btn-group">
+          <button class="btn-secondary" @click="prevQuestion" :disabled="currentIndex === 0">Prev</button>
+          
+          <!-- Skip 按钮：未提交且不是最后一题时显示 -->
+          <button 
+            class="btn-secondary" 
+            v-if="!hasSubmitted && currentIndex < questionList.length - 1" 
+            @click="skipQuestion"
+          >
+            Skip
+          </button>
+
+          <!-- 主按钮：Check / Next / Finish -->
+          <button class="btn-primary" @click="handleMainAction" :class="btnStatusClass">
+            {{ mainBtnText }}
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 4. 题目导览抽屉 (Drawer) -->
+    <view class="drawer-overlay" v-if="showDrawer" @click="toggleDrawer">
+      <view class="drawer-panel" @click.stop>
+        <view class="drawer-header">
+          <text class="dh-title">Question List</text>
+          <view class="dh-stats">
+            <text class="ds-item"><text class="dot green"></text> Correct</text>
+            <text class="ds-item"><text class="dot red"></text> Wrong</text>
+            <text class="ds-item"><text class="dot gray"></text> Todo</text>
+          </view>
+        </view>
+        
+        <scroll-view scroll-y class="drawer-body">
+          <view class="q-grid">
+            <view 
+              class="q-cell" 
+              v-for="(item, index) in questionList" 
+              :key="item._id"
+              :class="getQCellClass(index)"
+              @click="jumpToQuestion(index)"
+            >
+              {{ index + 1 }}
+              <!-- 右上角小标记：当前题 -->
+              <view class="current-indicator" v-if="index === currentIndex"></view>
+            </view>
+          </view>
+        </scroll-view>
+
+        <!-- 未完成提示 -->
+        <view class="drawer-footer" v-if="unansweredCount > 0">
+          <text class="warn-text">⚠️ You have {{ unansweredCount }} unanswered questions.</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 结算弹窗 (保持不变) -->
+    <view class="result-modal" v-if="showSummary">
+      <!-- ... 这里复用之前的结算弹窗代码 ... -->
+      <view class="modal-backdrop"></view>
+      <view class="modal-content">
+        <view class="modal-icon">🏆</view>
+        <text class="modal-title">Session Complete!</text>
+        <view class="stats-grid">
+          <view class="stat-box highlight">
+            <text class="val">{{ correctCount }} / {{ questionList.length }}</text>
+            <text class="label">Correct Answers</text>
+          </view>
+          <view class="stat-box">
+            <text class="val">{{ formatTime(duration) }}</text>
+            <text class="label">Time Spent</text>
+          </view>
+        </view>
+        <view class="modal-actions">
+          <button class="btn-outline" @click="handleRetry">Try Again</button>
+          <button class="btn-fill" @click="handleExit">Back to Library</button>
+        </view>
+      </view>
+    </view>
+
+  </view>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
+import { onLoad, onUnload } from '@dcloudio/uni-app';
 import QuizChoice from '@/components/Quiz/QuizChoice.vue';
 import QuizCodeGap from '@/components/Quiz/QuizCodeGap.vue';
+import { getCloudObject } from '@/utils/cloud.js';
 
-const quizCo = uniCloud.importObject('quiz-co', { customUI: true });
+const quizCo = getCloudObject('quiz-co');
 
-// 数据状态
+// 状态
 const loading = ref(true);
 const questionList = ref([]);
 const currentIndex = ref(0);
-const userAnswers = ref([]); // 二维数组：索引对应题号，值是该题的答案数组
-const submitStatus = ref([]); // 记录每一题是否已提交
+const userAnswers = ref([]); 
+const submitStatus = ref([]); 
+// 存储题目解析记录结构: { 0: { is_correct: true, analysis: '...', correct_val: [...] }, ... }
+const resultsLog = ref({}); 
+const currentResult = ref(null);
+const showDrawer = ref(false); // 抽屉开关
+const showSummary = ref(false); // 结算开关
 
-// 计算属性
+// 计时器状态
+const duration = ref(0);
+const isTimerRunning = ref(false);
+let timerInterval = null;
+
+// --- 计算属性 ---
 const currentQ = computed(() => questionList.value[currentIndex.value]);
 const currentAns = computed(() => userAnswers.value[currentIndex.value] || []);
 const hasSubmitted = computed(() => submitStatus.value[currentIndex.value] === true);
+const progressPercent = computed(() => ((currentIndex.value + 1) / questionList.value.length) * 100);
 
-// 判断当前题是否正确
-const isCurrentCorrect = computed(() => {
-  if (!currentQ.value) return false;
-  // 简单的数组全等比较
-  const correct = currentQ.value.answer.correct_val;
-  const user = currentAns.value;
-  if (!user || user.length !== correct.length) return false;
-  // 注意：如果是填空题，顺序必须一致；选择题如果是多选，可能需要 sort
-  return JSON.stringify(user) === JSON.stringify(correct);
+const isCurrentCorrect = computed(() => currentResult.value?.is_correct || false);
+
+// 统计逻辑
+const correctCount = computed(() => {
+  return Object.values(resultsLog.value).filter(res => res && res.is_correct).length;
+});
+const answeredCount = computed(() => submitStatus.value.filter(v => v).length);
+const unansweredCount = computed(() => questionList.value.length - answeredCount.value);
+
+// --- 监听切题 (核心修复逻辑) ---
+// 每次 currentIndex 变化时，自动检查是否有缓存的结果
+watch(currentIndex, (newIndex) => {
+  if (submitStatus.value[newIndex] && resultsLog.value[newIndex]) {
+    // 如果这道题做过，且有缓存结果 -> 恢复显示
+    currentResult.value = resultsLog.value[newIndex];
+  } else {
+    // 没做过 -> 清空结果
+    currentResult.value = null;
+  }
 });
 
-// 按钮文本动态变化
+// 按钮文字逻辑
 const mainBtnText = computed(() => {
   if (!hasSubmitted.value) return 'Check Answer';
   if (currentIndex.value === questionList.value.length - 1) return 'Finish';
@@ -151,11 +240,12 @@ const btnStatusClass = computed(() => {
   return isCurrentCorrect.value ? 'btn-success' : 'btn-retry';
 });
 
-// 加载数据
+// --- 初始化 ---
 onLoad((opt) => {
-  if (opt.categoryId) {
-    fetchQuestions(opt.categoryId);
-  }
+  if (opt.categoryId) fetchQuestions(opt.categoryId);
+  if (opt.startIndex) currentIndex.value = parseInt(opt.startIndex);
+  // 自动开始计时 (可选)
+  // toggleTimer();
 });
 
 const fetchQuestions = async (id) => {
@@ -163,7 +253,6 @@ const fetchQuestions = async (id) => {
     const res = await quizCo.getQuestionsByChapter(id);
     if (res.errCode === 0) {
       questionList.value = res.data;
-      // 初始化答案数组结构
       userAnswers.value = new Array(res.data.length).fill().map(() => []); 
       submitStatus.value = new Array(res.data.length).fill(false);
     }
@@ -172,46 +261,139 @@ const fetchQuestions = async (id) => {
   }
 };
 
-// 核心：按钮点击逻辑
-const handleMainAction = () => {
-  // 1. 如果还没提交 -> 提交并校验
+// --- 核心操作 ---
+
+// 1. 跳过
+// --- 修改 Skip 逻辑 ---
+const skipQuestion = () => {
+  if (currentIndex.value < questionList.value.length - 1) {
+    currentIndex.value++;
+    // 🔴 同样交由 watch 处理状态重置
+  }
+};
+
+// 2. 主按钮动作
+// --- 修改 handleMainAction (存入缓存) ---
+const handleMainAction = async () => {
+  // A. 提交校验
   if (!hasSubmitted.value) {
-    if (currentAns.value.length === 0) {
-      return uni.showToast({ title: 'Please answer first', icon: 'none' });
+    if (currentAns.value.length === 0) return uni.showToast({ title: 'Please enter answer', icon: 'none' });
+    
+    uni.showLoading({ title: 'Checking...' });
+    try {
+      const res = await quizCo.checkAnswer(
+        currentQ.value._id, 
+        currentAns.value, 
+        duration.value,
+        'practice'
+      );
+      
+      if (res.errCode === 0) {
+        // 1. 设置当前显示结果
+        currentResult.value = res.data;
+        // 2. 标记已提交
+        submitStatus.value[currentIndex.value] = true;
+        // 3. 🔴 核心：将完整结果存入缓存池，供回头查看使用
+        resultsLog.value[currentIndex.value] = res.data;
+        
+        if (!isTimerRunning.value) toggleTimer();
+      } else {
+        uni.showToast({ title: 'Check failed', icon: 'none' });
+      }
+    } finally {
+      uni.hideLoading();
     }
-    
-    // 标记为已提交，界面会自动显示结果卡片
-    submitStatus.value[currentIndex.value] = true;
-    
-    // 这里可以加震动反馈
-    // if (!isCurrentCorrect.value) uni.vibrateShort();
     return;
   }
 
-  // 2. 如果已提交 -> 进入下一题
+  // B. 下一题 (Next)
   if (currentIndex.value < questionList.value.length - 1) {
     currentIndex.value++;
+    // 🔴 不需要手动设置 currentResult = null 了，watch 会自动处理
   } else {
-    // 3. 最后一题 -> 退出或显示总分
-    uni.showToast({ title: 'All Done!', icon: 'success' });
-    setTimeout(() => uni.navigateBack(), 1000);
+    // C. 结算
+    handleFinish();
   }
 };
 
+// 3. 完成检查
+const handleFinish = () => {
+  // 检查是否有未完成的题目
+  if (unansweredCount.value > 0) {
+    uni.showToast({ title: `You have ${unansweredCount.value} unfinished questions`, icon: 'none' });
+    // 自动打开抽屉，让用户去选
+    showDrawer.value = true;
+  } else {
+    // 全部完成，显示结算
+    if (isTimerRunning.value) toggleTimer();
+    showSummary.value = true;
+  }
+};
+
+// --- 抽屉相关 ---
+const toggleDrawer = () => showDrawer.value = !showDrawer.value;
+
+const jumpToQuestion = (index) => {
+  currentIndex.value = index;
+
+  showDrawer.value = false;
+};
+
+// --- 修改 Drawer 样式判断逻辑 ---
+const getQCellClass = (index) => {
+  const classes = [];
+  if (index === currentIndex.value) classes.push('active-border');
+  
+  if (submitStatus.value[index]) {
+     // 🔴 核心修复：判断 resultsLog[index]?.is_correct
+        const log = resultsLog.value[index];
+        // 安全判断：log 必须存在且 is_correct 为 true 才算对
+        const isRight = log && log.is_correct === true;
+        
+        classes.push(isRight ? 'correct' : 'wrong');
+  } else {
+    classes.push('todo');
+  }
+  
+  return classes.join(' ');
+};
+
+// --- 计时器与通用 ---
+const toggleTimer = () => {
+  if (isTimerRunning.value) {
+    clearInterval(timerInterval);
+    isTimerRunning.value = false;
+  } else {
+    isTimerRunning.value = true;
+    timerInterval = setInterval(() => { duration.value++; }, 1000);
+  }
+};
+
+const resetTimer = () => {
+  uni.vibrateShort();
+  if (timerInterval) clearInterval(timerInterval);
+  isTimerRunning.value = false;
+  duration.value = 0;
+};
+
 const prevQuestion = () => {
-  if (currentIndex.value > 0) currentIndex.value--;
+  if (currentIndex.value > 0) {
+      currentIndex.value--;
+      currentResult.value = null;
+  }
 };
 
 const handleExit = () => uni.navigateBack();
-
-// 工具函数
-const getDifficultyLabel = (diff) => {
-  const map = { 1: 'Easy', 2: 'Medium', 3: 'Hard' };
-  return map[diff] || 'Easy';
-};
-
-const startTimer = () => {
-  timer = setInterval(() => { duration.value++; }, 1000);
+const handleRetry = () => {
+    // 重置所有状态
+    currentIndex.value = 0;
+    userAnswers.value = userAnswers.value.map(() => []);
+    submitStatus.value = submitStatus.value.map(() => false);
+    resultsLog.value = {};
+    currentResult.value = null;
+    duration.value = 0;
+    showSummary.value = false;
+    showDrawer.value = false;
 };
 
 const formatTime = (seconds) => {
@@ -220,188 +402,160 @@ const formatTime = (seconds) => {
   return `${m}:${s}`;
 };
 
-const handleKeydown = (e) => {
-  if (e.key === 'ArrowRight') nextQuestion();
-  if (e.key === 'ArrowLeft') prevQuestion();
-};
+const getDifficultyLabel = (d) => ({1:'Easy',2:'Medium',3:'Hard'}[d] || 'Easy');
+
+onUnload(() => { if (timerInterval) clearInterval(timerInterval); });
 </script>
 
 <style lang="scss" scoped>
-/* 沉浸式容器 */
+/* 继承之前的全局布局 */
 .quiz-workspace {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #FFFFFF;
-  color: #1E293B;
-  overflow: hidden; /* 禁止整页滚动 */
+  height: 100vh; display: flex; flex-direction: column; background: #FFF; color: #1E293B; overflow: hidden;
 }
 
-/* 1. Header */
+/* Header 优化 */
 .quiz-header {
-  height: 60px;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 24px;
-  border-bottom: 1px solid #E2E8F0;
-  background: #fff;
-  flex-shrink: 0;
+  height: 60px; padding: 0 24px; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: space-between;
   
-  .header-left {
-    display: flex; align-items: center; gap: 12px; cursor: pointer;
-    .back-icon { font-size: 18px; color: #64748B; transition: color 0.2s; &:hover { color: #0F172A; } }
-    .chapter-title { font-weight: 600; font-size: 14px; max-width: 200px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .header-left .btn-close { font-weight: 600; color: #64748B; cursor: pointer; &:hover{color:#0F172A} }
+  
+  .header-center { flex: 1; max-width: 300px; display: flex; flex-direction: column; align-items: center; }
+  .progress-text { font-size: 12px; color: #94A3B8; margin-bottom: 4px; }
+  .progress-track { width: 100%; height: 4px; background: #F1F5F9; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #0F172A; transition: width 0.3s; }
+
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  
+  /* 列表开关 */
+  .list-toggle {
+    display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.2s;
+    &:hover { background: #F1F5F9; }
+    .icon-list { font-size: 16px; }
+    .list-text { font-size: 13px; font-weight: 600; color: #475569; }
   }
-  
-  .header-center {
-    flex: 1; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    .progress-text { font-size: 12px; color: #94A3B8; font-weight: 500; }
-    .progress-track {
-      width: 100%; height: 4px; background: #F1F5F9; border-radius: 4px; overflow: hidden;
-      .progress-fill { height: 100%; background: #0F172A; border-radius: 4px; transition: width 0.3s ease; }
-    }
-  }
-  
-  .header-right {
-    .timer-badge {
-      background: #F8FAFC; padding: 4px 10px; border-radius: 6px; font-size: 13px; color: #64748B; font-family: monospace; font-weight: 600; border: 1px solid #E2E8F0;
-    }
+
+  .timer-wrapper { display: flex; align-items: center; gap: 8px; }
+  .reset-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #F1F5F9; border-radius: 50%; color: #64748B; font-size: 14px; cursor: pointer; &:hover { transform: rotate(-90deg); color: #0F172A; } }
+  .timer-badge { 
+    background: #F1F5F9; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; color: #64748B; display: flex; gap: 6px; cursor: pointer; border: 1px solid transparent;
+    &.is-running { background: #ECFDF5; color: #059669; border-color: #10B981; }
   }
 }
 
-/* 2. Body (Split View) */
-.quiz-body {
-  flex: 1;
-  display: flex;
-  overflow: hidden; /* 内部滚动 */
-  
-  /* 左侧 */
-  .panel-context {
-    width: 40%; /* PC端占比 */
-    background: #F8FAFC;
-    border-right: 1px solid #E2E8F0;
-    display: flex; flex-direction: column;
-  }
-  
-  /* 右侧 */
-  .panel-interaction {
-    width: 60%;
-    background: #FFFFFF;
-    display: flex; flex-direction: column;
-  }
-  
-  .scroll-inner { height: 100%; }
+/* 抽屉样式 (Drawer) */
+.drawer-overlay {
+  position: fixed; top: 60px; bottom: 0; left: 0; right: 0; 
+  background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); z-index: 50;
+  display: flex; justify-content: flex-end; /* 右侧滑出 */
 }
 
-/* Context 内容样式 */
-.context-content {
-  padding: 40px;
+.drawer-panel {
+  width: 320px; background: #fff; height: 100%; border-left: 1px solid #E2E8F0;
+  display: flex; flex-direction: column; animation: slideLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+  overflow-y: auto;
   
-  .tags-row {
-    display: flex; gap: 8px; margin-bottom: 16px;
-    .tag {
-      font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.5px;
-      &.lv-1 { background: #DCFCE7; color: #166534; } /* Green */
-      &.lv-2 { background: #FEF3C7; color: #92400E; } /* Yellow */
-      &.lv-3 { background: #FEE2E2; color: #991B1B; } /* Red */
-      &.type { background: #E0F2FE; color: #075985; } /* Blue */
-    }
+  .drawer-header {
+    padding: 20px; border-bottom: 1px solid #E2E8F0;
+    .dh-title { font-size: 18px; font-weight: 800; display: block; margin-bottom: 12px; }
+	/* --- 修复抽屉中的圆点颜色 --- */
+	.dh-stats, .dh-legend {
+		/* 确保父容器布局正确 */
+		display: flex; gap: 16px; 
+		.ds-item, .legend-item { 
+			font-size: 12px; color: #64748B; 
+			display: flex; align-items: center; gap: 6px; 
+		}
+	}
+
+	/* 定义圆点基础样式 */
+	.dot {
+		width: 8px; 
+		height: 8px; 
+		border-radius: 50%;
+		display: inline-block;
+		/* 默认灰色 */
+		background: #E2E8F0; 
+  
+		/* 状态颜色 */
+		&.green { background: #10B981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+		&.red   { background: #EF4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2); }
+		&.gray  { background: #E2E8F0; }
+	}
+  }
+
+  .drawer-body { flex: 1; padding: 20px; width: 80%;}
+  
+  /* 题目网格 */
+  .q-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px;
+	padding: 10px;
   }
   
-  .q-title { font-size: 24px; font-weight: 800; line-height: 1.4; color: #0F172A; margin-bottom: 24px; display: block; }
-  .q-desc-box { font-size: 16px; line-height: 1.8; color: #475569; }
-}
-
-/* Interaction 内容样式 */
-.interaction-content {
-  padding: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80%;
-  
-  .component-placeholder {
-    width: 100%; height: 300px; border: 2px dashed #E2E8F0; border-radius: 16px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: #F8FAFC;
+  .q-cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; position: relative;
+    background: #F8FAFC; color: #64748B; border: 1px solid transparent; transition: all 0.2s;
     
-    .ph-text { font-size: 18px; font-weight: 700; color: #94A3B8; margin-bottom: 8px; }
-    .ph-sub { font-size: 14px; color: #CBD5E1; }
+    &:hover { transform: scale(1.05); }
+    
+    &.correct { background: #ECFDF5; color: #059669; border-color: #10B981; }
+    &.wrong { background: #FEF2F2; color: #EF4444; border-color: #EF4444; }
+    &.todo { background: #F1F5F9; }
+    
+    &.active-border { border: 2px solid #0F172A; color: #0F172A; } /* 当前题 */
+    
+    .current-indicator {
+      position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; background: #0F172A; border-radius: 50%;
+    }
+  }
+
+  .drawer-footer {
+    padding: 16px; background: #FFF7ED; border-top: 1px solid #FFEDD5; text-align: center;
+    .warn-text { font-size: 13px; color: #C2410C; font-weight: 500; }
   }
 }
 
-/* 3. Footer Action Bar */
+@keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+/* Body & Footer 样式复用之前的 */
+.quiz-body { flex: 1; display: flex; overflow: hidden; }
+.panel-context { width: 40%; background: #F8FAFC; border-right: 1px solid #E2E8F0; display: flex; flex-direction: column; }
+.panel-interaction { width: 60%; display: flex; flex-direction: column; }
+.scroll-inner { height: 100%; }
+.context-content, .interaction-content { padding: 40px; }
+
 .action-bar {
-  height: 80px;
-  background: #fff;
-  border-top: 1px solid #E2E8F0;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  z-index: 10;
+  height: 80px; border-top: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: center;
+  .bar-inner { width: 100%; max-width: 1200px; padding: 0 24px; display: flex; justify-content: flex-end; }
+  .btn-group { display: flex; gap: 12px; }
   
-  .bar-inner {
-    width: 100%; max-width: 1200px; padding: 0 24px;
-    display: flex; justify-content: flex-end; /* 按钮靠右 */
-    
-    .btn-group { display: flex; gap: 16px; }
-    
-    button {
-      height: 48px; padding: 0 32px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none;
-      
-      &.btn-primary { 
-        background: #0F172A; color: #fff; 
-        &:hover { background: #334155; transform: translateY(-1px); }
-        &:active { transform: scale(0.98); }
-      }
-      &.btn-secondary {
-        background: #fff; color: #475569; border: 1px solid #CBD5E1;
-        &:hover { background: #F1F5F9; border-color: #94A3B8; }
-        &:disabled { opacity: 0.5; cursor: not-allowed; }
-      }
-    }
+  button {
+    height: 48px; padding: 0 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none;
+    &.btn-primary { background: #0F172A; color: #fff; &.btn-success{background:#10B981} &.btn-retry{background:#0F172A} }
+    &.btn-secondary { background: #fff; border: 1px solid #CBD5E1; color: #475569; &:hover{background:#F1F5F9} }
   }
 }
 
-.loading-container, .empty-state {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: #64748B;
-}
+.tags-row { display: flex; gap: 8px; margin-bottom: 16px; .tag { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; &.type{background:#E0F2FE;color:#0284C7} &.lv-1{background:#DCFCE7;color:#166534} } }
+.q-title { font-size: 24px; font-weight: 800; color: #0F172A; line-height: 1.4; }
 
-/* 📱 移动端适配 (Stack View) */
-@media (max-width: 900px) {
-  .quiz-body { flex-direction: column; overflow-y: auto; } /* 上下堆叠，且允许整体滚动 */
-  
-  .panel-context { 
-    width: 100%; min-height: auto; border-right: none; border-bottom: 1px solid #E2E8F0; 
-    .scroll-inner { height: auto; } /* 移动端取消内部滚动，改用整体滚动 */
-  }
-  .context-content { padding: 24px; }
-  
-  .panel-interaction { 
-    width: 100%; min-height: 400px; 
-    .scroll-inner { height: auto; }
-  }
-  .interaction-content { padding: 24px; }
-  
-  /* 隐藏 Header 中不重要的信息 */
-  .header-center { display: none; } 
-}
-/* 结果反馈卡片 (Glassmorphism) */
-.feedback-card {
-  margin-top: 30px; padding: 20px; border-radius: 12px;
-  width: 100%; max-width: 680px;
-  animation: slideUp 0.3s ease;
-  
-  &.success { background: #ECFDF5; border: 1px solid #10B981; color: #065F46; }
-  &.error { background: #FEF2F2; border: 1px solid #EF4444; color: #991B1B; }
-  
-  .fb-header { display: flex; align-items: center; margin-bottom: 8px; font-weight: 800; font-size: 18px; }
-  .fb-icon { margin-right: 10px; }
-  .fb-desc { font-size: 15px; line-height: 1.6; opacity: 0.9; }
-}
+/* 结算弹窗复用之前的样式... */
+.result-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; display: flex; align-items: center; justify-content: center; }
+.modal-backdrop { position: absolute; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+.modal-content { position: relative; z-index: 2; background: #fff; width: 400px; border-radius: 24px; padding: 40px 30px; text-align: center; }
+.modal-icon { font-size: 48px; margin-bottom: 16px; }
+.modal-title { font-size: 24px; font-weight: 800; display: block; margin-bottom: 24px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+.stat-box { background: #F8FAFC; padding: 16px; border-radius: 12px; .val{font-size:20px;font-weight:700} .label{font-size:12px;color:#64748B} &.highlight{background:#ECFDF5; .val{color:#059669}} }
+.modal-actions { display: flex; gap: 12px; button{flex:1;height:44px;border-radius:10px;font-weight:600;cursor:pointer} .btn-outline{background:#fff;border:1px solid #E2E8F0} .btn-fill{background:#0F172A;color:#fff;border:none} }
 
-/* 按钮状态变化 */
-.btn-primary {
-  transition: all 0.3s !important;
-  &.btn-success { background: #10B981 !important; } /* 答对变绿 */
-  &.btn-retry { background: #0F172A !important; } /* 答错保持深色 (Next) */
+/* 反馈卡片 */
+.feedback-card { margin-top: 30px; padding: 20px; border-radius: 12px; &.success{background:#ECFDF5;border:1px solid #10B981;color:#065F46} &.error{background:#FEF2F2;border:1px solid #EF4444;color:#991B1B} .fb-header{display:flex;align-items:center;font-weight:800;margin-bottom:8px; gap:8px} .fb-desc{line-height:1.6} }
+
+@media(max-width: 900px) {
+  .quiz-body { flex-direction: column; overflow-y: auto; }
+  .panel-context, .panel-interaction { width: 100%; min-height: auto; }
+  .drawer-panel { width: 80%; }
 }
-
-.btn-close { font-size: 14px; font-weight: 600; cursor: pointer; color: #64748B; &:hover{color:#000} }
-
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>

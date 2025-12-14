@@ -33,10 +33,11 @@
             <view class="meta-row">
               <view class="progress-badge">
                 <text class="label">Total Progress</text>
-                <text class="val">0%</text>
+                <!-- 绑定后端返回的 info.total_progress -->
+                <text class="val">{{ parentInfo.total_progress || 0 }}%</text>
               </view>
               <view class="stat-badge">
-                <text>🎓 {{ chapters.length }} Chapters</text>
+                <text>🎓 {{ parentInfo.total_chapters || 0 }} Chapters</text>
               </view>
             </view>
           </view>
@@ -77,9 +78,9 @@
                 <!-- 底部元数据 -->
                 <view class="card-footer" v-if="item.status !== 'coming_soon'">
                   <view class="progress-mini">
-                    <view class="bar" :style="{ width: getProgress(item) + '%' }"></view>
+                    <view class="bar" :style="{ width: (item.progress_percent || 0) + '%' }"></view>
                   </view>
-                  <text class="footer-text">{{ item.finished_questions || 0 }} / {{ item.total_questions }} Questions</text>
+                  <text class="footer-text">{{ item.finished_questions }} / {{ item.total_questions }} Questions</text>
                 </view>
               </view>
               
@@ -95,6 +96,7 @@
     
     <PcFooter />
   </view>
+    <FeedbackFab />
 </template>
 
 <script setup>
@@ -102,7 +104,7 @@ import { ref} from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import PcNavbar from '@/components/PcNavbar/PcNavbar.vue';
 import PcFooter from '@/components/PcFooter/PcFooter.vue';
-
+import FeedbackFab from '@/components/FeedbackFab/FeedbackFab.vue';
 const quizCo = uniCloud.importObject('quiz-co', { customUI: true });
 
 const parentId = ref('');
@@ -135,11 +137,6 @@ const goBack = () => {
   uni.navigateBack();
 };
 
-const getProgress = (item) => {
-  if (!item.total_questions) return 0;
-  return ((item.finished_questions / item.total_questions) * 100).toFixed(0);
-};
-
 const getDotClass = (item) => {
   if (item.status === 'coming_soon') return 'is-locked';
   if (item.finished_questions > 0) return 'is-active';
@@ -155,7 +152,8 @@ const enterChapter = (item) => {
   // 核心跳转：进入答题页，带上子分类ID
   // 这里的 'practice' 是我们之前写的答题页，你可以根据是否是考试模式跳转不同页面
   uni.navigateTo({
-    url: `/pages/quiz/practice?categoryId=${item._id}&title=${item.name}`
+	// url: `/pages/quiz/practice?categoryId=${item._id}&title=${item.name}`
+	url: `/pages/quiz/list?id=${item._id}`
   });
 };
 </script>

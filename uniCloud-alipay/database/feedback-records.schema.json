@@ -1,0 +1,33 @@
+{
+	"bsonType": "object",
+	"required": ["user_id", "content", "type"],
+	"permission": {
+		"read": "doc.user_id == auth.uid",
+		"create": "auth.uid != null",
+		"update": false,
+		"delete": false
+	},
+	"properties": {
+		"_id": { "description": "ID" },
+		"user_id": { "bsonType": "string", "description": "用户ID" },
+		"type": { 
+            "bsonType": "string", 
+            "description": "suggestion | bug | content | other" 
+        },
+		"images": { 
+		            "bsonType": "array", 
+		            "description": "图片列表",
+		            "items": { "bsonType": "string" }
+		},
+		"content": { "bsonType": "string", "description": "反馈内容" },
+        "contact": { "bsonType": "string", "description": "联系方式(选填)" },
+		"status": { 
+            "bsonType": "int", 
+            "description": "0:待处理, 1:处理中, 2:已回复, 3:已关闭",
+            "defaultValue": 0
+        },
+        "reply_content": { "bsonType": "string", "description": "管理员回复" },
+        "reply_date": { "bsonType": "timestamp" },
+		"create_date": { "bsonType": "timestamp", "defaultValue": { "$env": "now" } }
+	}
+}

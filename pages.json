@@ -3,7 +3,7 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-							"navigationBarTitleText": "UniCloud PC Home",
+							// "navigationBarTitleText": "UniCloud PC Home",
 			                "navigationStyle": "custom", // 关键：隐藏默认导航栏，使用自定义 PcNavbar
 			                "enablePullDownRefresh": false
 						}
@@ -28,7 +28,37 @@
 		      "path": "pages/quiz/practice",
 		      "style": { "navigationStyle": "custom", "titleNView": false }
 		}
-	,{
+	,
+		{
+			      "path": "pages/record/history",
+			      "style": { "navigationStyle": "custom", "titleNView": false }
+			}
+		,
+		{
+			      "path": "pages/quiz/list",
+			      "style": { "navigationStyle": "custom", "titleNView": false }
+			}
+		,
+		{
+			      "path": "pages/feedback/index",
+			      "style": { "navigationStyle": "custom", "titleNView": false }
+			}
+		,
+		{
+			      "path": "pages/feedback/admin",
+			      "style": { "navigationStyle": "custom", "titleNView": false }
+			}
+		,
+		{
+		  "path": "pages/profile/index",
+		  "style": { "navigationStyle": "custom" }
+		},
+		{
+		  "path": "pages/404/404",
+		  "style": { "navigationStyle": "custom" }
+		},
+	
+	{
     "path": "uni_modules/uni-id-pages/pages/register/register",
     "style": {
         "navigationBarTitleText": "注册"
@@ -132,9 +162,9 @@
 ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
+		"navigationBarTitleText": "SYNTAX",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
-	},
-	"uniIdRouter": {}
+	}
+	// "uniIdRouter": {}
 }

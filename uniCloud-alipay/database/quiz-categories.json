@@ -1,0 +1,10 @@
+
+  {
+    "name": "03. 环境搭建与基础语法",
+    "description": "理解变量、输入输出与基本数据类型，写出你的第一行代码。",
+    "icon": "",
+    "sort": 10,
+    "status": true,
+    "parent_id": "REPLACE_WITH_ROOT_ID", 
+    "unlock_rules": { "pre_category_id": null, "pass_score": 0 }
+  }

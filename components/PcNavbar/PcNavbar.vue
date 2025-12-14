@@ -1,13 +1,13 @@
 <template>
   <view class="navbar-wrapper">
     <view class="container-xl navbar-inner">
-      <text class="logo" @click="goHome">UNI-CLOUD</text>
+      <text class="logo" @click="goHome">SYNTAX</text>
       
       <view class="nav-menu">
-        <text class="nav-item">Products</text>
-        <text class="nav-item">Solutions</text>
-        <text class="nav-item">Pricing</text>
-        <text class="nav-item">Docs</text>
+        <text class="nav-item">Products-xu</text>
+        <text class="nav-item">Solutions-huan</text>
+        <text class="nav-item">Pricing-tian</text>
+        <text class="nav-item">Docs-King</text>
       </view>
       
       <view class="nav-actions">
@@ -21,9 +21,11 @@
           <view class="user-profile-area">
             <view class="avatar-wrapper">
               <!-- 核心改变：直接使用 store.userInfo 读取数据 -->
-              <image v-if="store.userInfo.avatar_file && store.userInfo.avatar_file.url" 
-                     :src="store.userInfo.avatar_file.url" 
-                     class="avatar-img" mode="aspectFill"></image>
+			  <!-- store.userInfo.avatar_file.url -->
+				<image v-if="store.userInfo?.avatar_file?.url" 
+					:src="realAvatarUrl"  
+					class="avatar-img" mode="aspectFill">
+				</image>
               <view v-else class="avatar-placeholder">{{ userInitial }}</view>
             </view>
 
@@ -34,14 +36,33 @@
               </view>
               
               <view class="menu-divider"></view>
-              <view class="menu-item"><text class="icon">👤</text> Profile Settings</view>
-              <view class="menu-item"><text class="icon">📊</text> Dashboard</view>
-              <view class="menu-divider"></view>
+              <view class="menu-item" @click="goProfile">
+				  <text class="icon">👤</text> Profile Settings
+			  </view>
+			  
+			  <view class="menu-item" @click="goHistory">
+			      <text class="icon">🕒</text> Learning Activity
+			  </view>
+			  
+			  <view class="menu-item" @click="goFeedback">
+				  <text class="icon">💬</text> Help & Feedback
+			  </view>
+              <!-- <view class="menu-item"><text class="icon">📊</text> Dashboard</view> -->
               
+			  <view class="menu-divider"></view>
+              
+			  <!-- 管理员可见 -->
+			  <template v-if="isAdmin">
+				<view class="menu-item admin-item" @click="goAdminFeedback">
+			      <text class="icon">🛠️</text> Admin Console
+			    </view>
+			  </template>
+			  
               <view class="menu-item logout" @click="handleLogout">
                 <text class="icon">🚪</text> Log Out
-              </view>
+              </view>  
             </view>
+			
           </view>
         </template>
       </view>
@@ -50,12 +71,20 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref,computed ,watch ,onMounted} from 'vue';
 // 1. 引入官方 store
 import { store, mutations } from '@/uni_modules/uni-id-pages/common/store.js';
 
 const IS_MODAL_MODE = false; 
 const emit = defineEmits(['openAuth']);
+const realAvatarUrl = ref('');
+
+//计算是否 是管理员
+const isAdmin = computed(()=>{
+	// console.log(",",store.userInfo)
+	if (!store.hasLogin || !store.userInfo.role) return false;
+	  return store.userInfo.role.includes('admin');
+})
 
 // 计算首字母
 const userInitial = computed(() => {
@@ -67,6 +96,11 @@ const userInitial = computed(() => {
 });
 
 const goHome = () => uni.reLaunch({ url: '/pages/index/index' });
+const goFeedback = () => {uni.navigateTo({ url: '/pages/feedback/index' });};
+const goProfile = () => {uni.navigateTo({ url: '/pages/profile/index' });};
+// 跳转管理页
+const goAdminFeedback = () => {uni.navigateTo({ url: '/pages/feedback/admin' });};
+
 
 const handleAuth = (type) => {
   if (IS_MODAL_MODE) {
@@ -76,6 +110,24 @@ const handleAuth = (type) => {
   }
 };
 
+const getRealUrl = async (fileId) => {
+  if (!fileId) {
+    realAvatarUrl.value = '';
+    return;
+  }
+  if (fileId.startsWith('http') || fileId.startsWith('blob')) {
+    realAvatarUrl.value = fileId;
+    return;
+  }
+  try {
+    const res = await uniCloud.getTempFileURL({ fileList: [fileId] });
+    if (res.fileList && res.fileList.length > 0) {
+      realAvatarUrl.value = res.fileList[0].tempFileURL;
+    }
+  } catch (e) {
+    console.error('Navbar头像转换失败', e);
+  }
+};
 // 2. 退出登录逻辑
 const handleLogout = () => {
   uni.showModal({
@@ -108,6 +160,35 @@ const handleLogout = () => {
     }
   });
 };
+
+//跳转到历史答题页面
+const goHistory = ()=> {
+	uni.navigateTo({
+		url:'/pages/record/history',
+		animationType:'fade-in'
+	})
+	
+}
+
+
+//监听用户信息变化 
+// 只要 store 里的头像 ID 变了（比如上传成功后），立刻重新获取 https 链接
+watch(() => store.userInfo, (newUserInfo) => {
+  // 1. 安全获取 file 对象
+  const avatarFile = newUserInfo?.avatar_file;
+  
+  // 2. 优先取 avatar_file.url，如果没有，再尝试取旧版字段 avatar
+  // 注意这里加了 ?. 防止报错
+  const fileId = avatarFile?.url || newUserInfo?.avatar;
+  
+  // 3. 只有当 fileId 存在时才去请求
+  if (fileId) {
+    getRealUrl(fileId);
+  } else {
+    realAvatarUrl.value = ''; // 如果没有头像，清空 url
+  }
+}, { immediate: true, deep: true });
+
 </script>
 
 <style lang="scss" scoped>
@@ -221,6 +302,11 @@ const handleLogout = () => {
     color: #FF4D4F;
     &:hover { background: #FFF1F0; }
   }
+}
+.admin-item {
+  color: #1677FF; /* 品牌蓝，区别于普通菜单 */
+  font-weight: 600;
+  &:hover { background: #E6F7FF; }
 }
 
 /* 响应式 */
