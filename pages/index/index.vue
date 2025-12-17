@@ -143,6 +143,7 @@
     <PcFooter />
   </view>
   <FeedbackFab />
+  <aichat />
 </template>
 
 <script setup>
@@ -151,6 +152,7 @@ import PcNavbar from '@/components/PcNavbar/PcNavbar.vue';
 import PcFooter from '@/components/PcFooter/PcFooter.vue';
 import PcReveal from '@/components/PcReveal/PcReveal.vue';
 import FeedbackFab from '@/components/FeedbackFab/FeedbackFab.vue';
+import aichat from'@/components/AiChatWidget/ai-chat-widget.vue'
 //引入登录状态检测
 import { store, mutations } from '@/uni_modules/uni-id-pages/common/store.js';
 
