@@ -60,4 +60,4 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/uni-syntax.git
+   [git clone https://github.com/your-username/uni-syntax.git](https://github.com/huantianXu0v0/syntax.git)
