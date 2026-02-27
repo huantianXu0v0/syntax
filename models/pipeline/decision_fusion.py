@@ -40,7 +40,8 @@ class DecisionFusion(nn.Module):
         reject_threshold: 单分支拒绝阈值 (默认 0.3)
     """
 
-    def __init__(self, base_weights=None, threshold=0.85, reject_threshold=0.3):
+    def __init__(self, base_weights=None, threshold=0.85, reject_threshold=0.3,
+                 adaptive_ratio=0.5):
         super().__init__()
         self.threshold = threshold
         self.reject_threshold = reject_threshold
@@ -51,6 +52,7 @@ class DecisionFusion(nn.Module):
                 "liveness": 0.3,
                 "gesture": 0.2,
             }
+        self.adaptive_ratio = adaptive_ratio
         self.register_buffer(
             "base_weights",
             torch.tensor([
@@ -114,8 +116,9 @@ class DecisionFusion(nn.Module):
 
         # === 自适应权重融合 ===
         adaptive_weights = self.gate_network(confidences)  # (B, 3)
-        # 与基础权重混合
-        final_weights = 0.5 * self.base_weights.unsqueeze(0) + 0.5 * adaptive_weights
+        # 与基础权重混合 (比例可配置)
+        r = self.adaptive_ratio
+        final_weights = (1 - r) * self.base_weights.unsqueeze(0) + r * adaptive_weights
 
         # 加权融合
         fused_confidence = (final_weights * confidences).sum(dim=-1)  # (B,)

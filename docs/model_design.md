@@ -243,4 +243,4 @@ models/
 18. Kittler J, et al. "On Combining Classifiers." *IEEE TPAMI, 1998*.
 19. Sun K, et al. "Deep High-Resolution Representation Learning for Visual Recognition." *CVPR 2019*.
 20. Ma J, et al. "Segment Anything in Medical Images." *Nature Communications, 2024*.
-21. Jia W, et al. "A Survey on Palmprint Recognition." *2023*.
+21. Jia W, et al. "A Survey on Palmprint Recognition." *Pattern Recognition, 2023*.

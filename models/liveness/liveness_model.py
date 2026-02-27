@@ -66,7 +66,8 @@ class CentralDifferenceConv2d(nn.Module):
         if abs(self.theta) < 1e-8:
             return out_normal
 
-        # 中心差分卷积
+        # 简化的中心差分近似：计算全卷积与中心加权响应的差值，
+        # 近似捕捉中心像素与邻域像素的差异梯度信息
         kernel = self.conv.weight
         kernel_diff = kernel.sum(dim=[2, 3], keepdim=True)
         out_diff = F.conv2d(

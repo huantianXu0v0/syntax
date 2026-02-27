@@ -101,18 +101,11 @@ class PalmprintROIExtractor(nn.Module):
         B = image.shape[0]
         x1, y1, x2, y2 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3]
 
-        # 构建仿射变换矩阵
-        # 将 bbox 区域映射到 [-1, 1] 空间
-        sx = 2.0 / (x2 - x1 + 1e-6)
-        sy = 2.0 / (y2 - y1 + 1e-6)
-        tx = -1.0 - sx * x1
-        ty = -1.0 - sy * y1
-
-        # 注意: grid_sample 需要的是从输出到输入的映射
-        # 所以我们构建逆映射
+        # affine_grid 期望从输出 [-1,1] 空间映射回输入 [-1,1] 空间
+        # theta[0,0] = (x2-x1)/2 为 x 缩放，theta[0,2] = (x1+x2)-1 为 x 平移
         theta = torch.zeros(B, 2, 3, device=image.device)
-        theta[:, 0, 0] = 1.0 / sx
-        theta[:, 1, 1] = 1.0 / sy
+        theta[:, 0, 0] = (x2 - x1) / 2.0
+        theta[:, 1, 1] = (y2 - y1) / 2.0
         theta[:, 0, 2] = (x1 + x2) - 1.0
         theta[:, 1, 2] = (y1 + y2) - 1.0
 
