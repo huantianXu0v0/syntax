@@ -50,6 +50,10 @@
 			}
 		,
 		{
+		  "path": "pages/palmprint/index",
+		  "style": { "navigationStyle": "custom", "titleNView": false }
+		},
+		{
 		  "path": "pages/profile/index",
 		  "style": { "navigationStyle": "custom" }
 		},
